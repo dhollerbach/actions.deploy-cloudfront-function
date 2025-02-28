@@ -1,0 +1,43 @@
+name: Deploy CloudFront Function
+description: Composite action that deploys source code updates to an existing / premade CloudFront Function in AWS.
+
+runs:
+  using: composite
+
+  steps:
+    - name: Deploy CloudFront Function
+      run: |
+        ${{ github.action_path }}/deploy.sh \
+          "${{ inputs.function-name }}" \
+          "${{ inputs.comment }}" \
+          "${{ inputs.source-file }}" \
+          "${{ inputs.runtime }}" \
+          "${{ inputs.wait-for-publish }}"
+      shell: bash
+
+branding:
+  icon: upload-cloud
+  color: blue
+
+inputs:
+  function-name:
+    description: The name of your CloudFront Function.
+    required: true
+
+  comment:
+    description: A comment to describe your CloudFront Function.
+    required: true
+
+  runtime:
+    default: cloudfront-js-2.0
+    description: The runtime environment version for your CloudFront Function.
+    required: false
+
+  source-file:
+    description: The local file path of your source code for the CloudFront Function.
+    required: true
+
+  wait-for-publish:
+    default: "false"
+    description: Whether or not to wait for the CloudFront Function to be fully deployed (takes around 5 minutes). Defaults to false.
+    required: false
