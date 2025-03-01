@@ -39,7 +39,7 @@ runs:
         logger info "Updating ${{ inputs.function-name }}..."
         NEW_ETAG=$(aws cloudfront update-function \
             --name "${{ inputs.function-name }}" \
-            --function-config "{\"Comment\": \"${{ inputs.comment }}\", \"Runtime\": \"$RUNTIME\"}" \
+            --function-config "{\"Comment\": \"${{ inputs.comment }}\", \"Runtime\": \"${{ inputs.runtime }}\"}" \
             --function-code fileb://"${{ inputs.source-file }}" \
             --if-match "$CURRENT_ETAG" \
             --query 'ETag' --output text)
