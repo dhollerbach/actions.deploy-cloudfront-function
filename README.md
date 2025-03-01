@@ -48,5 +48,5 @@ GitHub action that deploys source code updates to an existing CloudFront Functio
     function-name: my-viewer-request
     comment: My awesome viewer-request CloudFront Function
     source-file: ./functions/viewer-request.js
-    wait-for-publish: "true"
+    wait-for-publish: true
 ```
