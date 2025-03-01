@@ -1,5 +1,5 @@
 name: Deploy CloudFront Function
-description: Composite action that deploys source code updates to an existing / premade CloudFront Function in AWS.
+description: GitHub action that deploys source code updates to an existing CloudFront Function in AWS.
 
 runs:
   using: composite
