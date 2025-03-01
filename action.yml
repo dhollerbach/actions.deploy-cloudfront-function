@@ -7,12 +7,67 @@ runs:
   steps:
     - name: Deploy CloudFront Function
       run: |
-        ${{ github.action_path }}/deploy.sh \
-          "${{ inputs.function-name }}" \
-          "${{ inputs.comment }}" \
-          "${{ inputs.source-file }}" \
-          "${{ inputs.runtime }}" \
-          "${{ inputs.wait-for-publish }}"
+        # Setup Logger
+
+        YELLOW="\033[33m"
+        GREEN="\033[32m"
+        RED="\033[31m"
+        BLUE="\033[34m"
+        RESET="\033[0m"
+
+        logger() {
+            case "$1" in
+            info)    COLOR=$BLUE; ICON="ℹ️";;
+            success) COLOR=$GREEN; ICON="✅";;
+            warning) COLOR=$YELLOW; ICON="⚠️";;
+            error)   COLOR=$RED; ICON="❌";;
+            *)       COLOR=$RESET; ICON="";;
+            esac
+
+            shift  # Remove the first argument
+            echo -e "${COLOR}${ICON} $@${RESET}"
+        }
+
+        # Fetch CloudFront Function ETag
+
+        logger info "Fetching ETag for ${{ inputs.function-name }}..."
+        CURRENT_ETAG=$(aws cloudfront describe-function --name "${{ inputs.function-name }}" --query 'ETag' --output text)
+        logger success "Successfully fetched ETag: $CURRENT_ETAG"
+
+        # Update CloudFront Function
+
+        logger info "Updating ${{ inputs.function-name }}..."
+        NEW_ETAG=$(aws cloudfront update-function \
+            --name "${{ inputs.function-name }}" \
+            --function-config "{\"Comment\": \"${{ inputs.comment }}\", \"Runtime\": \"$RUNTIME\"}" \
+            --function-code fileb://"${{ inputs.source-file }}" \
+            --if-match "$CURRENT_ETAG" \
+            --query 'ETag' --output text)
+        logger success "Successfully updated ${{ inputs.function-name }}. New ETag: $NEW_ETAG"
+
+        # Publish CloudFront Function
+
+        logger info "Publishing ${{ inputs.function-name }} with ETag: $NEW_ETAG..."
+        aws cloudfront publish-function --name "${{ inputs.function-name }}" --if-match "$NEW_ETAG"
+        logger success "Successfully published ${{ inputs.function-name }}"
+
+        # Wait for CloudFront Function to fully deploy
+
+        if [[ "${{ inputs.wait-for-publish }}" == "true" ]]; then
+            logger info "Waiting for ${{ inputs.function-name }} to be published..."
+            while true; do
+                status=$(aws cloudfront describe-function --name "${{ inputs.function-name }}" --query 'FunctionSummary.Status' --output text)
+                echo "Current status: $status"
+
+                if [[ "$status" = "DEPLOYED" ]]; then
+                    logger success "${{ inputs.function-name }} is now published and deployed."
+                    break
+                fi
+
+                echo "⏳ Still deploying... Checking again in 5 seconds..."
+                sleep 5
+            done
+        fi
       shell: bash
 
 branding:
