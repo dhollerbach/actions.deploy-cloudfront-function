@@ -1,6 +1,6 @@
 # Deploy CloudFront Function
 
-Composite action that deploys source code updates to an existing / premade CloudFront Function in AWS.
+GitHub action that deploys source code updates to an existing CloudFront Function in AWS.
 
 ## Inputs
 
